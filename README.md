@@ -1,165 +1,286 @@
-# Emotion Detection and Action Suggestion System
-Overview
+# 🧠 Emotion-Aware Reflective Journal System
 
-This project is a machine learning-based emotion detection system that predicts a user’s emotional state and emotional intensity from reflective journal text and contextual features. Based on the predictions, the system also provides a suggested action and the best time to perform it.
+An NLP + Machine Learning system that analyzes **journal entries** and contextual lifestyle signals to detect a user's **emotional state**, predict **intensity**, and suggest **personalized mental wellness actions** — built using TF-IDF, Random Forest Classifier, and Random Forest Regressor.
 
-The project combines:
+---
 
-Text vectorization using TF-IDF
-Emotion classification using Random Forest Classifier
-Intensity prediction using Random Forest Regressor
-Rule-based decision engine for action recommendation
-Interactive user input system for live predictions
+## 📌 Table of Contents
 
-This makes the project a simple end-to-end pipeline for emotion-aware text analysis.
+- [Overview](#overview)
+- [How It Works](#how-it-works)
+- [Features](#features)
+- [Tech Stack](#tech-stack)
+- [Dataset](#dataset)
+- [NLP Pipeline](#nlp-pipeline)
+- [Model Details](#model-details)
+- [Decision Engine](#decision-engine)
+- [Project Structure](#project-structure)
+- [Installation](#installation)
+- [Usage](#usage)
+- [Results](#results)
+- [Future Improvements](#future-improvements)
+- [Author](#author)
 
-Problem Statement
+---
 
-People often express emotions through text, such as journal entries or personal reflections. This project aims to analyze such text and identify:
+## 📖 Overview
 
-the predicted emotional state
-the predicted intensity level
-an appropriate suggested action
-when that action should be taken
+This project goes beyond basic sentiment analysis — it simulates a **reflective journaling assistant** that:
 
-The goal is to build a small intelligent system that can convert free-text emotional reflections into meaningful outputs.
+1. Takes a user's **journal text + lifestyle context** as input
+2. Detects the **emotional state** (happy, sad, angry, neutral, etc.)
+3. Predicts the **intensity** of that emotion (numeric score)
+4. Runs a **Decision Engine** that recommends a **personalized action** with timing
 
-Features
-Loads training and test datasets
-Handles missing values
-Combines multiple input columns into one feature text
-Converts text into numerical vectors using TF-IDF
-Predicts emotion labels using Random Forest Classification
-Predicts intensity values using Random Forest Regression
-Applies a decision engine to suggest actions
-Exports final predictions to a CSV file
-Accepts live user input from the terminal for real-time predictions
-Technologies Used
-Python
-Pandas
-Scikit-learn
-TF-IDF Vectorizer
-Random Forest Classifier
-Random Forest Regressor
-Project Workflow
-1. Data Loading
+**Real-World Use Cases:**
+- Mental health journaling apps
+- Mood tracking systems
+- Employee wellness monitoring
+- AI-powered therapy assistants
 
-The project reads:
+---
 
-a training dataset
-a test dataset
+## ⚙️ How It Works
 
-The training dataset is used to train the models, while the test dataset is used to generate predictions.
+```
+Journal Text + Context Features
+        │
+        ▼
+  Feature Combination
+  (text + ambience + time_of_day +
+   previous_day_mood + face_emotion_hint +
+   reflection_quality)
+        │
+        ▼
+  TF-IDF Vectorization (max 5000 features)
+        │
+        ├──► RandomForestClassifier ──► Predicted Emotion Label
+        │                               (happy / sad / angry / neutral...)
+        │
+        └──► RandomForestRegressor  ──► Predicted Intensity Score
+                                        (numeric value)
+                                              │
+                                              ▼
+                                     🔧 Decision Engine
+                                              │
+                                              ▼
+                               Suggested Action + When To Do It
+```
 
-2. Data Preprocessing
+---
 
-Missing values are filled with empty strings to avoid null-related errors during processing. Then, several useful columns are merged into a single combined text feature:
+## ✨ Features
 
-journal_text
-ambience_type
-time_of_day
-previous_day_mood
-face_emotion_hint
-reflection_quality
+- 📓 Multi-feature input — journal text + ambience, time of day, mood, face hint
+- 🤖 Dual ML model — Classifier (emotion label) + Regressor (intensity score)
+- 🔧 Rule-based Decision Engine — maps emotion + intensity → actionable suggestions
+- 💬 Real-time User Input System — type your feelings, get instant recommendations
+- 📁 Batch prediction — processes full test dataset and saves `final_output.csv`
+- 🧹 Text preprocessing with TF-IDF vectorization
 
-This combined text is used as the main input for the ML models.
+---
 
-3. Feature Extraction
+## 🛠 Tech Stack
 
-The combined text is transformed into numerical vectors using TF-IDF Vectorization with a maximum of 5000 features. This helps convert textual information into a machine-readable form.
+| Category          | Tools / Libraries                              |
+|-------------------|------------------------------------------------|
+| Language          | Python 3.x                                     |
+| ML Models         | RandomForestClassifier, RandomForestRegressor  |
+| NLP               | TF-IDF Vectorizer (Scikit-learn)               |
+| Preprocessing     | LabelEncoder, fillna, feature combination      |
+| Data Processing   | Pandas, NumPy                                  |
+| Model Evaluation  | accuracy_score, mean_squared_error             |
+| Development Env   | Jupyter Notebook / VS Code                     |
+| Version Control   | Git, GitHub                                    |
 
-4. Target Encoding
+---
 
-The emotional_state column is encoded into numeric labels using LabelEncoder for classification.
-The intensity column is used directly as a numerical target for regression.
+## 📂 Dataset
 
-5. Model Training
+| File | Description |
+|------|-------------|
+| `Sample_arvyax_reflective_dataset.xlsx` | Training data with labeled emotions |
+| `arvyax_test_inputs_120.xlsx` | Test data for batch predictions |
 
-Two separate machine learning models are trained:
+### Input Features Used:
 
-RandomForestClassifier for predicting emotion
-RandomForestRegressor for predicting intensity
+| Feature               | Description                                      |
+|-----------------------|--------------------------------------------------|
+| `journal_text`        | User's written journal/reflection entry          |
+| `ambience_type`       | Environment context (calm, noisy, etc.)          |
+| `time_of_day`         | Morning / afternoon / night                      |
+| `previous_day_mood`   | Mood from the previous day                       |
+| `face_emotion_hint`   | Facial expression hint (if available)            |
+| `reflection_quality`  | Quality of the reflection (deep, surface, etc.)  |
 
-This dual-model approach allows the system to handle both categorical and numerical prediction tasks.
+### Target Columns:
 
-6. Prediction
+| Column           | Type           | Description                    |
+|------------------|----------------|--------------------------------|
+| `emotional_state`| Categorical    | Emotion label (happy/sad/angry)|
+| `intensity`      | Numeric        | Intensity of the emotion       |
 
-The system predicts:
+---
 
-predicted_emotion
-predicted_intensity
+## 🔤 NLP Pipeline
 
-The predicted emotion labels are converted back into readable text using the fitted label encoder.
+```
+Step 1 → Fill missing values with empty string
+Step 2 → Combine all 6 features into one text string per row
+Step 3 → TF-IDF Vectorization (max_features = 5000)
+Step 4 → LabelEncoder on emotional_state (for classification target)
+Step 5 → intensity column used directly (for regression target)
+```
 
-7. Decision Engine
+---
 
-A rule-based decision engine maps the predicted emotion and intensity to:
+## 🧠 Model Details
 
-suggested_action
-when_to_do
+### 1️⃣ RandomForestClassifier
+- **Purpose**: Predicts emotion **label**
+- `n_estimators = 100`
+- Input: TF-IDF matrix
+- Output: Encoded emotion class → decoded via `LabelEncoder`
 
-For example:
+### 2️⃣ RandomForestRegressor
+- **Purpose**: Predicts emotion **intensity score**
+- `n_estimators = 100`
+- Input: TF-IDF matrix
+- Output: Continuous numeric intensity value
 
-If the emotion is sadness and intensity is high, the system may suggest talking to a friend immediately.
-If the emotion is anger and intensity is low, it may suggest going for a walk.
-8. Output Generation
+---
 
-The final results are saved into a CSV file named:
+## 🔧 Decision Engine
 
-final_output.csv
+The Decision Engine maps `(emotion, intensity)` → `(suggested_action, timing)`:
 
-This file contains the original test data along with predicted emotion, intensity, suggested action, and timing.
+| Emotion          | Intensity | Suggested Action              | Timing    |
+|------------------|-----------|-------------------------------|-----------|
+| sad / sadness    | > 3       | Talk to a friend immediately  | Now       |
+| sad / sadness    | ≤ 3       | Listen to music               | Later     |
+| angry / anger    | > 3       | Take a break                  | Now       |
+| angry / anger    | ≤ 3       | Go for a walk                 | Soon      |
+| happy / joy      | Any       | Keep going!                   | Anytime   |
+| Others           | Any       | Stay mindful                  | Flexible  |
 
-9. Interactive User Input
+---
 
-The project also includes a terminal-based prediction function where users can type their feelings manually. The system then predicts the emotion, intensity, and suggested action in real time.
+## 📁 Project Structure
 
-Input Features
+```
+emotion-journal-system/
+│
+├── data/
+│   ├── Sample_arvyax_reflective_dataset.csv    # Training data
+│   └── arvyax_test_inputs_120.csv              # Test data
+│
+├── Emotions_.py                                # Main script
+│
+├── output/
+│   └── final_output.csv                        # Predictions output
+│
+├── requirements.txt
+├── .gitignore
+└── README.md
+```
 
-The model uses the following features:
+---
 
-Journal text
-Ambience type
-Time of day
-Previous day mood
-Face emotion hint
-Reflection quality
-Output
+## ⚙️ Installation
 
-The system produces:
+### 1. Clone the Repository
+```bash
+git clone https://github.com/your-username/emotion-journal-system.git
+cd emotion-journal-system
+```
 
-Predicted emotion
-Predicted intensity
-Suggested action
-Recommended time for the action
-Why This Project Is Useful
+### 2. Create Virtual Environment
+```bash
+python -m venv venv
+source venv/bin/activate        # Windows: venv\Scripts\activate
+```
 
-This project demonstrates important machine learning concepts such as:
+### 3. Install Dependencies
+```bash
+pip install -r requirements.txt
+```
 
-text preprocessing
-feature combination
-NLP-based vectorization
-classification
-regression
-simple rule-based decision making
-user interaction through terminal input
+**`requirements.txt`**
+```
+pandas
+scikit-learn
+numpy
+```
 
-It is a useful beginner-to-intermediate project for showcasing practical ML workflow in a portfolio.
+---
 
-Limitations
-The decision engine is manually defined and not learned from data.
-Live user input uses default placeholder values for non-text features such as ambience and time of day.
-No model evaluation metrics are printed in the final workflow, even though evaluation libraries are imported.
-The system should not be treated as a real mental health diagnostic tool.
-Performance may depend heavily on dataset quality and label consistency.
-Future Improvements
-Add proper model evaluation such as accuracy, RMSE, confusion matrix, and classification report
-Use hyperparameter tuning for better performance
-Build a web interface using Flask or Streamlit
-Replace rule-based suggestions with a smarter recommendation system
-Add better preprocessing such as stopword removal, lemmatization, and text cleaning
-Use advanced NLP models like BERT or sentence transformers
-Allow users to input contextual values instead of default placeholders
-Conclusion
+## 🚀 Usage
 
-This project is a simple yet effective demonstration of how machine learning can be used to analyze emotional text and generate meaningful recommendations. It covers the complete pipeline from preprocessing to prediction to action suggestion, making it a solid project for learning and portfolio building.
+### Run Batch Prediction (on test dataset)
+```bash
+python Emotions_.py
+```
+Output saved to `final_output.csv` with columns:
+- `predicted_emotion`
+- `predicted_intensity`
+- `suggested_action`
+- `when_to_do`
+
+### Real-Time User Input Mode
+
+After batch prediction, the script automatically starts interactive mode:
+
+```
+Enter your feelings (type 'exit' to stop)
+
+You: I feel really low and exhausted today
+
+--- RESULT ---
+Emotion     : sad
+Intensity   : 3.85
+Suggested Action: Talk to a friend immediately
+When        : Now
+----------------------
+```
+
+Type `exit` to quit.
+
+---
+
+## 📊 Sample Output
+
+| journal_text (sample)         | predicted_emotion | predicted_intensity | suggested_action             | when_to_do |
+|-------------------------------|-------------------|---------------------|------------------------------|------------|
+| "Feeling really down today"   | sad               | 4.2                 | Talk to a friend immediately | Now        |
+| "Had a great productive day!" | happy             | 3.8                 | Keep going!                  | Anytime    |
+| "Got frustrated at work"      | angry             | 2.9                 | Go for a walk                | Soon       |
+
+---
+
+## 🔮 Future Improvements
+
+- [ ] Add Streamlit UI for interactive journaling experience
+- [ ] Expand emotion classes (fear, surprise, disgust, anxiety)
+- [ ] Use BERT / transformer models for deeper text understanding
+- [ ] Add more contextual inputs (sleep hours, weather, activity level)
+- [ ] Deploy as a REST API using FastAPI
+- [ ] Store user history for mood trend analysis over time
+- [ ] Add multilingual support (Hindi, etc.)
+
+---
+
+## 👩‍💻 Author
+
+**Anshu Choudhary**  
+📧 anshukumari88260@gmail.com  
+🔗 [LinkedIn](https://linkedin.com) | [GitHub](https://github.com)
+
+---
+
+## 📄 License
+
+This project is open-source and available under the [MIT License](LICENSE).
+
+---
+
+> ⭐ If you found this project helpful, give it a star on GitHub!
